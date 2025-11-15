@@ -1,0 +1,5 @@
+{
+  "name": "Leagle Eagle AI",
+  "description": "A chatbot that searches a simulated case law database of running down matters to advise on potential pay outs for injuries.",
+  "requestFramePermissions": []
+}
