@@ -1,5 +1,5 @@
 {
-  "name": "Leagle Eagle AI",
-  "description": "A chatbot that searches a simulated case law database of running down matters to advise on potential pay outs for injuries.",
+  "name": "Amicus Pro",
+  "description": "An AI assistant to help you search and understand Kenyan Case Law, Statutes, and Precedents from Kenya Law Reports.",
   "requestFramePermissions": []
 }

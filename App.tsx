@@ -24,7 +24,7 @@ const App: React.FC = () => {
       }
       const ai = new GoogleGenAI({ apiKey });
       const chatInstance = ai.chats.create({
-        model: 'gemini-flash-lite-latest',
+        model: 'gemini-2.5-flash',
         config: {
           systemInstruction: SYSTEM_INSTRUCTION,
           tools: [{googleSearch: {}}],
