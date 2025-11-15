@@ -9,3 +9,8 @@ export interface Message {
   role: Role;
   content: string;
 }
+
+export interface Source {
+  uri: string;
+  title: string;
+}

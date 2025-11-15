@@ -1,9 +1,10 @@
 
 import React from 'react';
-import { Message, Role } from '../types';
+import { Message, Role, Source } from '../types';
 
 interface ChatMessageProps {
   message: Message;
+  sources?: Source[];
 }
 
 // Basic markdown to HTML renderer
@@ -23,7 +24,7 @@ const MarkdownRenderer: React.FC<{ content: string }> = ({ content }) => {
 };
 
 
-const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
+const ChatMessage: React.FC<ChatMessageProps> = ({ message, sources }) => {
   const isModel = message.role === Role.MODEL;
 
   return (
@@ -42,6 +43,20 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
         }`}
       >
         <MarkdownRenderer content={message.content} />
+        {isModel && sources && sources.length > 0 && (
+          <div className="mt-4 pt-3 border-t border-gray-600">
+            <h4 className="text-xs font-semibold text-gray-400 mb-2 uppercase tracking-wider">Sources</h4>
+            <ol className="space-y-1 list-decimal list-inside">
+              {sources.map((source, index) => (
+                <li key={index} className="text-sm text-cyan-400">
+                  <a href={source.uri} target="_blank" rel="noopener noreferrer" className="hover:underline" title={source.title}>
+                    {source.title || new URL(source.uri).hostname}
+                  </a>
+                </li>
+              ))}
+            </ol>
+          </div>
+        )}
       </div>
     </div>
   );

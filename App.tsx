@@ -4,7 +4,7 @@ import { GoogleGenAI, Chat } from "@google/genai";
 import Header from './components/Header';
 import ChatInput from './components/ChatInput';
 import ChatMessage from './components/ChatMessage';
-import { Message, Role } from './types';
+import { Message, Role, Source } from './types';
 import { SYSTEM_INSTRUCTION } from './constants';
 
 const App: React.FC = () => {
@@ -13,6 +13,8 @@ const App: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const chatRef = useRef<Chat | null>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
+  const [sourcesByMsgId, setSourcesByMsgId] = useState<Record<string, Source[]>>({});
+
 
   const initChat = useCallback(() => {
     try {
@@ -22,9 +24,10 @@ const App: React.FC = () => {
       }
       const ai = new GoogleGenAI({ apiKey });
       const chatInstance = ai.chats.create({
-        model: 'gemini-2.5-flash',
+        model: 'gemini-flash-lite-latest',
         config: {
           systemInstruction: SYSTEM_INSTRUCTION,
+          tools: [{googleSearch: {}}],
         },
       });
       chatRef.current = chatInstance;
@@ -74,11 +77,26 @@ const App: React.FC = () => {
       { id: modelMsgId, role: Role.MODEL, content: '' },
     ]);
 
+    const currentSources: Source[] = [];
+    const sourceUris = new Set<string>();
+
     try {
       const stream = await chatRef.current.sendMessageStream({ message: userMessage });
 
       for await (const chunk of stream) {
         const chunkText = chunk.text;
+
+        const groundingChunks = chunk.candidates?.[0]?.groundingMetadata?.groundingChunks;
+        if (groundingChunks) {
+            for (const c of groundingChunks) {
+                if (c.web && c.web.uri && !sourceUris.has(c.web.uri)) {
+                    const newSource = { uri: c.web.uri, title: c.web.title || c.web.uri };
+                    currentSources.push(newSource);
+                    sourceUris.add(newSource.uri);
+                }
+            }
+        }
+
         setMessages((prev) =>
           prev.map((msg) =>
             msg.id === modelMsgId
@@ -100,6 +118,9 @@ const App: React.FC = () => {
       );
     } finally {
       setIsLoading(false);
+      if (currentSources.length > 0) {
+        setSourcesByMsgId(prev => ({ ...prev, [modelMsgId]: currentSources }));
+      }
     }
   };
 
@@ -109,7 +130,7 @@ const App: React.FC = () => {
       <main ref={chatContainerRef} className="flex-1 overflow-y-auto p-4 md:p-6">
         <div className="max-w-4xl mx-auto">
           {messages.map((msg) => (
-            <ChatMessage key={msg.id} message={msg} />
+            <ChatMessage key={msg.id} message={msg} sources={sourcesByMsgId[msg.id]} />
           ))}
            {isLoading && messages[messages.length - 1]?.role === Role.MODEL && messages[messages.length - 1]?.content === '' && (
             <div className="flex items-start gap-4 my-4">
