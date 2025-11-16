@@ -6,6 +6,8 @@ import ChatMessage from './components/ChatMessage';
 import { Message, Role, Source } from './types';
 import { SYSTEM_INSTRUCTION } from './constants';
 import AIAvatar from './components/AIAvatar';
+import LoginPage from './components/LoginPage';
+import AdminDashboard from './components/AdminDashboard';
 
 const welcomeMessage: Message = {
   id: 'welcome-0',
@@ -14,7 +16,8 @@ const welcomeMessage: Message = {
 };
 
 const App: React.FC = () => {
-  const [messages, setMessages] = useState<Message[]>([welcomeMessage]);
+  const [user, setUser] = useState<{ type: 'user' | 'admin' | null; username: string | null }>({ type: null, username: null });
+  const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const chatRef = useRef<Chat | null>(null);
@@ -43,16 +46,59 @@ const App: React.FC = () => {
     }
   }, []);
 
+  // Check for logged-in user and load chat history on mount
   useEffect(() => {
-    initChat();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    const storedUser = localStorage.getItem('amicusUser');
+    if (storedUser) {
+      setUser(JSON.parse(storedUser));
+    }
+
+    const storedHistory = localStorage.getItem('chatHistory');
+    // Only set messages if there is history, otherwise start with the welcome message
+    setMessages(storedHistory ? JSON.parse(storedHistory) : [welcomeMessage]);
   }, []);
+
+
+  useEffect(() => {
+    // Save chat history to local storage whenever it changes
+    // But don't save if it's just the initial welcome message
+    if (messages.length > 1) {
+      localStorage.setItem('chatHistory', JSON.stringify(messages));
+    }
+  }, [messages]);
+
+  useEffect(() => {
+    if (user.type === 'user') {
+      initChat();
+    }
+  }, [user.type, initChat]);
 
   useEffect(() => {
     if (chatContainerRef.current) {
       chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
     }
   }, [messages]);
+
+  const handleLogin = (username: string, password) => {
+    if (username.toLowerCase() === 'admin' && password === 'admin') {
+      const adminUser = { type: 'admin' as const, username: 'Admin' };
+      localStorage.setItem('amicusUser', JSON.stringify(adminUser));
+      setUser(adminUser);
+    } else {
+      const regularUser = { type: 'user' as const, username };
+      localStorage.setItem('amicusUser', JSON.stringify(regularUser));
+      setUser(regularUser);
+      // If no chat history exists, start with the welcome message
+      if (!localStorage.getItem('chatHistory')) {
+        setMessages([welcomeMessage]);
+      }
+    }
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('amicusUser');
+    setUser({ type: null, username: null });
+  };
 
   const handleSendMessage = async (userMessage: string) => {
     if (!chatRef.current) {
@@ -124,9 +170,18 @@ const App: React.FC = () => {
     }
   };
 
+  if (!user.type) {
+    return <LoginPage onLogin={handleLogin} />;
+  }
+
+  if (user.type === 'admin') {
+    return <AdminDashboard onLogout={handleLogout} />;
+  }
+
+
   return (
     <div className="flex flex-col h-screen">
-      <Header />
+      <Header username={user.username} userType={user.type} onLogout={handleLogout} />
       <main ref={chatContainerRef} className="flex-1 overflow-y-auto p-4 md:p-6">
         <div className="max-w-4xl mx-auto">
           {messages.map((msg) => (

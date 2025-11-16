@@ -1,6 +1,13 @@
 import React, { useState } from 'react';
 
-const Header: React.FC = () => {
+interface HeaderProps {
+    username: string | null;
+    userType: 'user' | 'admin' | null;
+    onLogout: () => void;
+}
+
+
+const Header: React.FC<HeaderProps> = ({ username, userType, onLogout }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   return (
@@ -41,6 +48,14 @@ const Header: React.FC = () => {
             <a href="#" className="text-sm font-medium text-pink-400" aria-current="page">Ask a Lawyer</a>
             <a href="#" className="text-sm font-medium text-gray-300 hover:text-pink-400 transition-colors duration-200">Find a Lawyer</a>
             <a href="#" className="text-sm font-medium text-gray-300 hover:text-pink-400 transition-colors duration-200">Be a Lawyer</a>
+             {username && (
+                 <button
+                    onClick={onLogout}
+                    className="bg-red-600/80 text-white font-semibold rounded-lg px-3 py-1.5 text-xs transition-all duration-200 ease-in-out enabled:hover:bg-red-500 enabled:active:scale-95"
+                >
+                    Logout
+                </button>
+             )}
         </nav>
 
         {/* Mobile Menu Button */}
@@ -72,6 +87,16 @@ const Header: React.FC = () => {
           <a href="#" className="text-pink-400 block px-3 py-2 rounded-md text-base font-medium" aria-current="page">Ask a Lawyer</a>
           <a href="#" className="text-gray-300 hover:text-white hover:bg-gray-700/50 block px-3 py-2 rounded-md text-base font-medium">Find a Lawyer</a>
           <a href="#" className="text-gray-300 hover:text-white hover:bg-gray-700/50 block px-3 py-2 rounded-md text-base font-medium">Be a Lawyer</a>
+           {username && (
+                <div className="border-t border-gray-700 pt-4 mt-4">
+                     <button
+                        onClick={onLogout}
+                        className="w-full text-left bg-red-600/80 text-white font-semibold rounded-lg px-3 py-2 text-base transition-all duration-200 ease-in-out enabled:hover:bg-red-500 enabled:active:scale-95"
+                    >
+                        Logout
+                    </button>
+                </div>
+             )}
         </div>
       </div>
     </header>
