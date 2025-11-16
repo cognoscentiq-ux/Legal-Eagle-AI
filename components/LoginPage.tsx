@@ -72,7 +72,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
                   type="submit"
                   className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-pink-600 hover:bg-pink-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500 focus:ring-offset-brand-med-dark transition-colors"
                 >
-                  Start Chating
+                  Start Chatting
                 </button>
               </div>
             </form>
