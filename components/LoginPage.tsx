@@ -70,9 +70,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
               autoComplete="current-password"
             />
           </div>
-          <p className="text-xs text-gray-500 text-center">
-            For demonstration: use <strong>admin / admin</strong> for the dashboard, or any other credentials for the user view.
-          </p>
+        
           <div>
             <button
               type="submit"
