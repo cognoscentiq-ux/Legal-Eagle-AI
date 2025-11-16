@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { GoogleGenAI, Chat } from "@google/genai";
 import Header from './components/Header';
@@ -118,10 +119,23 @@ const App: React.FC = () => {
     const userMsgId = Date.now().toString();
     const modelMsgId = (Date.now() + 1).toString();
 
-    setMessages((prev) => [
-        ...prev,
+    const updatedMessages = [
+        ...messages,
         { id: userMsgId, role: Role.USER, content: userMessage },
-    ]);
+    ];
+
+    setMessages(updatedMessages);
+
+    // Save chat history to the backend
+    if (user.email) {
+        fetch('/api/chatHistory', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ email: user.email, history: updatedMessages }),
+        });
+    }
 
     // Add a placeholder for the streaming response
     setMessages((prev) => [

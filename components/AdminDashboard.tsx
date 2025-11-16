@@ -9,10 +9,21 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
     const [allChatHistories, setAllChatHistories] = useState<Record<string, Message[]>>({});
 
     useEffect(() => {
-        const storedHistories = localStorage.getItem('chatHistory');
-        if (storedHistories) {
-            setAllChatHistories(JSON.parse(storedHistories));
-        }
+        const fetchChatHistory = async () => {
+            try {
+                const response = await fetch('/api/chatHistory');
+                if (response.ok) {
+                    const data = await response.json();
+                    setAllChatHistories(data);
+                } else {
+                    console.error('Failed to fetch chat history');
+                }
+            } catch (error) {
+                console.error('Error fetching chat history:', error);
+            }
+        };
+
+        fetchChatHistory();
     }, []);
 
     const generateXml = (histories: Record<string, Message[]>): string => {
@@ -120,7 +131,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                                 </div>
                            ))
                         ) : (
-                            <p className="text-gray-400 text-center py-8">No chat history found in this browser.</p>
+                            <p className="text-gray-400 text-center py-8">No chat history found.</p>
                         )}
                     </div>
                 </div>
