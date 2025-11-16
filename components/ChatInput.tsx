@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 
 interface ChatInputProps {
@@ -40,7 +41,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isLoading }) => {
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Ask about Kenyan case law, statutes, or precedents..."
+            placeholder="Type your question here."
             className="flex-1 bg-gray-700 text-gray-200 rounded-lg p-3 resize-none focus:ring-2 focus:ring-pink-500 focus:outline-none transition-shadow duration-200 max-h-40"
             rows={1}
             disabled={isLoading}
