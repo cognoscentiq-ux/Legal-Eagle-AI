@@ -1,20 +1,50 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+Amicus Pro is an AI-powered legal research assistant specialized in Kenyan law. It delivers clear, accurate answers supported by case law, Acts of Parliament, regulations, and scholarly commentary.
 
-# Run and deploy your AI Studio app
+Use Amicus Pro to quickly understand legal issues, support drafting, analyze cases, or conduct deep legal research with ease.
 
-This contains everything you need to run your app locally.
+⚖️ Key Capabilities
 
-View your app in AI Studio: https://ai.studio/apps/drive/1JzrEryE30RilZSdFnyM7YSptpjv1twWr
+🔍 Instant legal research using Kenyan sources
 
-## Run Locally
+📚 Citations included — case law, statutes & rules
 
-**Prerequisites:**  Node.js
+🎯 Accurate legal summaries of complex doctrines
 
+🧩 Expandable for integration into apps, bots, or legal workflows
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+💼 Ideal for:
+
+Lawyers & law firms
+
+Students & lecturers
+
+Paralegals
+
+Policy researchers
+
+Public legal education
+
+🚀 Features
+✔ Kenya-Focused Legal Data
+
+Constitution of Kenya, 2010
+
+Acts of Parliament
+
+Subsidiary legislation
+
+Superior court decisions
+
+Scholarly articles & legal commentary
+
+✔ Simple, Structured Answers
+
+Issue framing
+
+Legal rules
+
+Leading authorities
+
+Practical implications
+
+Statutory & case citations
