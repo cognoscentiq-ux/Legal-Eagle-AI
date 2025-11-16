@@ -27,14 +27,14 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
         {/* Left Panel: Introduction */}
         <div className="w-full md:w-1/2 p-8 bg-brand-med flex flex-col justify-center">
             <h1 className="font-extrabold text-2xl md:text-3xl leading-tight text-brand-accent mb-4">
-                Get Simple, Straight Answers<br/>to Complex Legal&nbsp;Challenges
+                Get Simple, Straight Answers to Complex Legal Challenges.
             </h1>
             <p className="text-md text-gray-200 mb-4">
                 Hello! I'm Matt, an AI guru with a strong legal research background.
             </p>
             <p className="text-gray-300 text-sm">
                 I'll search and compile insightful legal info on ANY QUESTION, sourcing my
-                answers from Kenyan Case Law, Acts of parliament and published&nbsp;articles.
+                answers from Kenyan Case Law, Acts of Parliament and published&nbsp;articles.
             </p>
         </div>
 
@@ -72,7 +72,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
                   type="submit"
                   className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-pink-600 hover:bg-pink-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500 focus:ring-offset-brand-med-dark transition-colors"
                 >
-                  Start Chatting
+                  Start Chating
                 </button>
               </div>
             </form>
