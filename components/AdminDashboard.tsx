@@ -14,25 +14,33 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
     const [selectedUser, setSelectedUser] = useState<string | null>(null);
 
     const fetchData = async () => {
+        console.log('[AdminDashboard] Starting to fetch chat history...');
+        setError(null); // Reset error state on new fetch
         try {
             const response = await fetch('/api/chatHistory');
+            console.log(`[AdminDashboard] Received response with status: ${response.status}`);
+
             if (!response.ok) {
-                throw new Error(`Failed to fetch data: ${response.statusText}`);
+                const errorBody = await response.text();
+                console.error(`[AdminDashboard] Fetch failed with status ${response.status}. Body:`, errorBody);
+                throw new Error(`Failed to fetch data. Server responded with ${response.status}.`);
             }
+
             const data = await response.json();
+            console.log('[AdminDashboard] Successfully parsed JSON data.');
             setChatData(data);
         } catch (err) {
-            setError(err instanceof Error ? err.message : 'An unknown error occurred.');
-            console.error(err);
+            console.error('[AdminDashboard] An error occurred during fetch or data processing:', err);
+            setError(err instanceof Error ? err.message : 'An unknown error occurred while fetching data.');
         } finally {
+            console.log('[AdminDashboard] Fetch process finished.');
             setIsLoading(false);
         }
     };
 
     useEffect(() => {
         fetchData();
-        // Set up polling to refresh data every 15 seconds
-        const interval = setInterval(fetchData, 15000);
+        const interval = setInterval(fetchData, 30000); // Poll every 30 seconds
         return () => clearInterval(interval);
     }, []);
 
@@ -104,12 +112,18 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
         </div>
     );
 
-    if (isLoading) {
+    if (isLoading && !Object.keys(chatData).length) { // Show loading only on initial load
         return <div className="flex items-center justify-center min-h-screen bg-brand-dark text-white">Loading Dashboard...</div>;
     }
 
-    if (error) {
-        return <div className="flex items-center justify-center min-h-screen bg-brand-dark text-red-400">Error: {error}</div>;
+    if (error && !Object.keys(chatData).length) { // Show error only if there's no data to display
+        return (
+            <div className="flex flex-col items-center justify-center min-h-screen bg-brand-dark text-red-400 p-4">
+                <h2 class='text-2xl font-bold mb-4'>Could not load dashboard data.</h2>
+                <p class='text-center'>{error}</p>
+                <p class='text-center mt-2 text-gray-400 text-sm'>This may be a temporary issue. The dashboard will auto-retry.</p>
+            </div>
+        );
     }
 
     return (
@@ -136,6 +150,11 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
             </header>
 
             <main className="p-4 md:p-6 max-w-7xl mx-auto">
+                 {error && (
+                    <div className="bg-red-900/50 text-red-300 p-3 rounded-lg mb-6 text-center">
+                        <p><strong>A temporary error occurred:</strong> {error} Retrying in background.</p>
+                    </div>
+                )}
                 <h2 className="text-2xl font-semibold mb-4">Usage Analytics</h2>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
@@ -146,7 +165,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                 </div>
 
                 {selectedUser ? (
-                    <UserChatHistory email={selectedUser} history={chatData[selectedUser]} />
+                    <UserChatHistory email={selectedUser} history={chatData[selectedUser] || []} />
                 ) : (
                     <div className="bg-brand-med-dark rounded-lg border border-brand-border shadow-md">
                         <h2 className="text-xl font-semibold p-4 border-b border-brand-border">User Activity</h2>
