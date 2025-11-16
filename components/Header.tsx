@@ -33,11 +33,7 @@ const Header: React.FC = () => {
             </span>
           </div>
         </div>
-        <nav className="flex items-center space-x-6">
-            <a href="#" className="text-sm font-medium text-pink-400" aria-current="page">Ask a Lawyer</a>
-            <a href="#" className="text-sm font-medium text-gray-300 hover:text-pink-400 transition-colors duration-200">Find a Lawyer</a>
-            <a href="#" className="text-sm font-medium text-gray-300 hover:text-pink-400 transition-colors duration-200">Be a Lawyer</a>
-        </nav>
+        
       </div>
     </header>
   );
