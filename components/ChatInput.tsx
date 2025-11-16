@@ -33,7 +33,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isLoading }) => {
   }, [message]);
 
   return (
-    <div className="bg-gray-800 p-4 border-t border-gray-700 sticky bottom-0">
+    <div className="bg-brand-med-dark p-4 border-t border-brand-border sticky bottom-0">
       <div className="max-w-4xl mx-auto">
         <form onSubmit={handleSubmit} className="flex items-start space-x-4">
           <textarea
@@ -42,7 +42,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isLoading }) => {
             onChange={(e) => setMessage(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Type your question here."
-            className="flex-1 bg-gray-700 text-gray-200 rounded-lg p-3 resize-none focus:ring-2 focus:ring-pink-500 focus:outline-none transition-shadow duration-200 max-h-40"
+            className="flex-1 bg-brand-med text-gray-200 rounded-lg p-3 resize-none focus:ring-2 focus:ring-pink-500 focus:outline-none transition-shadow duration-200 max-h-40"
             rows={1}
             disabled={isLoading}
             autoFocus
@@ -50,7 +50,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isLoading }) => {
           <button
             type="submit"
             disabled={isLoading || !message.trim()}
-            className="bg-pink-600 text-white font-semibold rounded-lg px-5 py-3 transition-all duration-200 ease-in-out enabled:hover:bg-pink-500 enabled:active:scale-95 disabled:bg-gray-600 disabled:cursor-not-allowed flex items-center justify-center"
+            className="bg-pink-600 text-white font-semibold rounded-lg px-5 py-3 transition-all duration-200 ease-in-out enabled:hover:bg-pink-500 enabled:active:scale-95 disabled:bg-brand-light disabled:cursor-not-allowed flex items-center justify-center"
           >
             {isLoading ? (
               <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">

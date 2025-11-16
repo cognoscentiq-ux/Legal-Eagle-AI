@@ -38,7 +38,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, sources }) => {
         <div className={`flex items-start gap-4 my-4`}>
           <AIAvatar />
           <div
-            className={`max-w-xl p-4 rounded-2xl text-base leading-relaxed bg-gray-700 text-gray-200 rounded-tl-none`}
+            className={`max-w-xl p-4 rounded-2xl text-base leading-relaxed bg-brand-med text-gray-200 rounded-tl-none`}
           >
             <div className="font-extrabold text-2xl md:text-3xl leading-tight">
                 <p>{line1}</p>
@@ -64,12 +64,12 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, sources }) => {
       )}
       <div
         className={`max-w-xl p-4 rounded-2xl text-base leading-relaxed ${
-          isModel ? 'bg-gray-700 text-gray-200 rounded-tl-none' : 'bg-purple-700 text-white rounded-br-none'
+          isModel ? 'bg-brand-med text-gray-200 rounded-tl-none' : 'bg-purple-700 text-white rounded-br-none'
         }`}
       >
         <MarkdownRenderer content={message.content} />
         {isModel && sources && sources.length > 0 && (
-          <div className="mt-4 pt-3 border-t border-gray-600">
+          <div className="mt-4 pt-3 border-t border-brand-border">
             <h4 className="text-xs font-semibold text-gray-400 mb-2 uppercase tracking-wider">Sources</h4>
             <ol className="space-y-1 list-decimal list-inside">
               {sources.map((source, index) => (

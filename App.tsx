@@ -196,7 +196,7 @@ const App: React.FC = () => {
            {isLoading && messages[messages.length - 1]?.role === Role.MODEL && messages[messages.length - 1]?.content === '' && (
             <div className="flex items-start gap-4 my-4">
               <AIAvatar />
-              <div className="max-w-xl p-4 rounded-2xl bg-gray-700 text-gray-200 rounded-tl-none">
+              <div className="max-w-xl p-4 rounded-2xl bg-brand-med text-gray-200 rounded-tl-none">
                 <div className="flex items-center space-x-2">
                     <span className="h-2 w-2 bg-pink-400 rounded-full animate-bounce [animation-delay:-0.3s]"></span>
                     <span className="h-2 w-2 bg-pink-400 rounded-full animate-bounce [animation-delay:-0.15s]"></span>
