@@ -19,26 +19,11 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
     <div className="min-h-screen bg-gray-900 flex flex-col items-center justify-center text-white p-4">
       {/* Logo and Title */}
       <div className="flex items-center mb-8">
-         <div className="w-12 h-12 flex items-center justify-center mr-3">
-            <svg viewBox="0 0 40 40" className="w-full h-full">
-              <defs>
-                <linearGradient id="logoAGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#f97316" />
-                    <stop offset="30%" stopColor="#ef4444" />
-                    <stop offset="70%" stopColor="#d946ef" />
-                    <stop offset="100%" stopColor="#8b5cf6" />
-                </linearGradient>
-              </defs>
-              <path d="M20 2 L2 38 L38 38 Z M20 12 L12 28 L28 28 Z" fill="url(#logoAGradient)" />
-            </svg>
+         <div className="w-16 h-16 flex items-center justify-center mr-3">
+            <img src="https://boboz.co.ke/wp-content/uploads/2025/11/amicus_1_logo.png" alt="Amicus Pro Logo" className="w-full h-full object-contain" />
           </div>
           <div className="flex flex-col justify-center -space-y-1">
-            <span className="text-4xl font-extrabold tracking-tight bg-gradient-to-r from-red-500 to-purple-500 bg-clip-text text-transparent">
-              AMICUS 
-            </span>
-             <span className="text-xs font-semibold tracking-[0.15em] text-amber-200/90 pl-px">
-              IT PAYS TO KNOW
-            </span>
+            
           </div>
       </div>
       
