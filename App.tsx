@@ -4,7 +4,7 @@ import Header from './components/Header';
 import ChatInput from './components/ChatInput';
 import ChatMessage from './components/ChatMessage';
 import { Message, Role, Source } from './types';
-import { SYSTEM_INSTRUCTION } from './constants';
+import { getSystemInstruction } from './constants';
 import AIAvatar from './components/AIAvatar';
 import LoginPage from './components/LoginPage';
 import AdminDashboard from './components/AdminDashboard';
@@ -16,8 +16,8 @@ const welcomeMessage: Message = {
 };
 
 const App: React.FC = () => {
-  const [user, setUser] = useState<{ type: 'user' | 'admin' | null; username: string | null }>({ type: null, username: null });
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [user, setUser] = useState<{ type: 'user' | 'admin' | null; name: string | null; email: string | null }>({ type: null, name: null, email: null });
+  const [messages, setMessages] = useState<Message[]>([welcomeMessage]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const chatRef = useRef<Chat | null>(null);
@@ -26,6 +26,7 @@ const App: React.FC = () => {
 
 
   const initChat = useCallback(() => {
+    if (!user.name) return;
     try {
       const apiKey = process.env.API_KEY;
       if (!apiKey) {
@@ -35,7 +36,7 @@ const App: React.FC = () => {
       const chatInstance = ai.chats.create({
         model: 'gemini-2.5-flash',
         config: {
-          systemInstruction: SYSTEM_INSTRUCTION,
+          systemInstruction: getSystemInstruction(user.name),
           tools: [{googleSearch: {}}],
         },
       });
@@ -44,34 +45,38 @@ const App: React.FC = () => {
       setError(e instanceof Error ? e.message : 'An unknown error occurred during initialization.');
       console.error(e);
     }
-  }, []);
+  }, [user.name]);
 
   // Check for logged-in user and load chat history on mount
   useEffect(() => {
     const storedUser = localStorage.getItem('amicusUser');
     if (storedUser) {
-      setUser(JSON.parse(storedUser));
-    }
+        const parsedUser = JSON.parse(storedUser);
+        setUser(parsedUser);
 
-    const storedHistory = localStorage.getItem('chatHistory');
-    // Only set messages if there is history, otherwise start with the welcome message
-    setMessages(storedHistory ? JSON.parse(storedHistory) : [welcomeMessage]);
+        if (parsedUser.type === 'user' && parsedUser.email) {
+            const allHistories = JSON.parse(localStorage.getItem('chatHistory') || '{}');
+            const userHistory = allHistories[parsedUser.email];
+            setMessages(userHistory && userHistory.length > 0 ? userHistory : [welcomeMessage]);
+        }
+    }
   }, []);
 
 
   useEffect(() => {
-    // Save chat history to local storage whenever it changes
-    // But don't save if it's just the initial welcome message
-    if (messages.length > 1) {
-      localStorage.setItem('chatHistory', JSON.stringify(messages));
+    // Save user-specific chat history to local storage whenever it changes
+    if (messages.length > 1 && user.type === 'user' && user.email) {
+        const allHistories = JSON.parse(localStorage.getItem('chatHistory') || '{}');
+        allHistories[user.email] = messages;
+        localStorage.setItem('chatHistory', JSON.stringify(allHistories));
     }
-  }, [messages]);
+  }, [messages, user.email, user.type]);
 
   useEffect(() => {
-    if (user.type === 'user') {
+    if (user.type === 'user' && user.name) {
       initChat();
     }
-  }, [user.type, initChat]);
+  }, [user.type, user.name, initChat]);
 
   useEffect(() => {
     if (chatContainerRef.current) {
@@ -79,25 +84,26 @@ const App: React.FC = () => {
     }
   }, [messages]);
 
-  const handleLogin = (username: string, password) => {
-    if (username.toLowerCase() === 'admin' && password === 'admin') {
-      const adminUser = { type: 'admin' as const, username: 'Admin' };
-      localStorage.setItem('amicusUser', JSON.stringify(adminUser));
-      setUser(adminUser);
+  const handleLogin = (name: string, email: string) => {
+    if (name.toLowerCase() === 'admin' && email.toLowerCase() === 'admin@amicus.pro') {
+        const adminUser = { type: 'admin' as const, name: 'Admin', email: 'admin@amicus.pro' };
+        localStorage.setItem('amicusUser', JSON.stringify(adminUser));
+        setUser(adminUser);
     } else {
-      const regularUser = { type: 'user' as const, username };
-      localStorage.setItem('amicusUser', JSON.stringify(regularUser));
-      setUser(regularUser);
-      // If no chat history exists, start with the welcome message
-      if (!localStorage.getItem('chatHistory')) {
-        setMessages([welcomeMessage]);
-      }
+        const regularUser = { type: 'user' as const, name, email };
+        localStorage.setItem('amicusUser', JSON.stringify(regularUser));
+        setUser(regularUser);
+        
+        const allHistories = JSON.parse(localStorage.getItem('chatHistory') || '{}');
+        const userHistory = allHistories[email];
+        setMessages(userHistory && userHistory.length > 0 ? userHistory : [welcomeMessage]);
     }
   };
 
   const handleLogout = () => {
     localStorage.removeItem('amicusUser');
-    setUser({ type: null, username: null });
+    setUser({ type: null, name: null, email: null });
+    chatRef.current = null;
   };
 
   const handleSendMessage = async (userMessage: string) => {
@@ -181,7 +187,7 @@ const App: React.FC = () => {
 
   return (
     <div className="flex flex-col h-screen">
-      <Header username={user.username} userType={user.type} onLogout={handleLogout} />
+      <Header name={user.name} userType={user.type} onLogout={handleLogout} />
       <main ref={chatContainerRef} className="flex-1 overflow-y-auto p-4 md:p-6">
         <div className="max-w-4xl mx-auto">
           {messages.map((msg) => (

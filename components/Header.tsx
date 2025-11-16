@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 
 interface HeaderProps {
-    username: string | null;
+    name: string | null;
     userType: 'user' | 'admin' | null;
     onLogout: () => void;
 }
 
 
-const Header: React.FC<HeaderProps> = ({ username, userType, onLogout }) => {
+const Header: React.FC<HeaderProps> = ({ name, userType, onLogout }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   return (
@@ -48,7 +48,7 @@ const Header: React.FC<HeaderProps> = ({ username, userType, onLogout }) => {
             <a href="#" className="text-sm font-medium text-pink-400" aria-current="page">Ask a Lawyer</a>
             <a href="#" className="text-sm font-medium text-gray-300 hover:text-pink-400 transition-colors duration-200">Find a Lawyer</a>
             <a href="#" className="text-sm font-medium text-gray-300 hover:text-pink-400 transition-colors duration-200">Be a Lawyer</a>
-             {username && (
+             {name && (
                  <button
                     onClick={onLogout}
                     className="bg-red-600/80 text-white font-semibold rounded-lg px-3 py-1.5 text-xs transition-all duration-200 ease-in-out enabled:hover:bg-red-500 enabled:active:scale-95"
@@ -69,11 +69,11 @@ const Header: React.FC<HeaderProps> = ({ username, userType, onLogout }) => {
             >
                 <span className="sr-only">Open main menu</span>
                 {isMenuOpen ? (
-                <svg className="block h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                <svg className="block h-6 w-6" xmlns="http://www.w.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
                 </svg>
                 ) : (
-                <svg className="block h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                <svg className="block h-6 w-6" xmlns="http://www.w.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
                 </svg>
                 )}
@@ -87,7 +87,7 @@ const Header: React.FC<HeaderProps> = ({ username, userType, onLogout }) => {
           <a href="#" className="text-pink-400 block px-3 py-2 rounded-md text-base font-medium" aria-current="page">Ask a Lawyer</a>
           <a href="#" className="text-gray-300 hover:text-white hover:bg-gray-700/50 block px-3 py-2 rounded-md text-base font-medium">Find a Lawyer</a>
           <a href="#" className="text-gray-300 hover:text-white hover:bg-gray-700/50 block px-3 py-2 rounded-md text-base font-medium">Be a Lawyer</a>
-           {username && (
+           {name && (
                 <div className="border-t border-gray-700 pt-4 mt-4">
                      <button
                         onClick={onLogout}
