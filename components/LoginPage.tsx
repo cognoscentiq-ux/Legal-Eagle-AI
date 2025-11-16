@@ -34,7 +34,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
           </div>
           <div className="flex flex-col justify-center -space-y-1">
             <span className="text-4xl font-extrabold tracking-tight bg-gradient-to-r from-red-500 to-purple-500 bg-clip-text text-transparent">
-              AMICUS PRO
+              AMICUS 
             </span>
              <span className="text-xs font-semibold tracking-[0.15em] text-amber-200/90 pl-px">
               IT PAYS TO KNOW
