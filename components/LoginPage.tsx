@@ -70,9 +70,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
               autoComplete="email"
             />
           </div>
-           <p className="text-xs text-gray-500 text-center">
-            Admin login: use <strong>admin</strong> and <strong>admin@amicus.pro</strong>
-          </p>
+           
           <div>
             <button
               type="submit"
