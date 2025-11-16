@@ -63,15 +63,27 @@ const App: React.FC = () => {
     }
   }, []);
 
-
   useEffect(() => {
-    // Save user-specific chat history to local storage whenever it changes
+    // Save user-specific chat history
     if (messages.length > 1 && user.type === 'user' && user.email) {
-        const allHistories = JSON.parse(localStorage.getItem('chatHistory') || '{}');
-        allHistories[user.email] = messages;
-        localStorage.setItem('chatHistory', JSON.stringify(allHistories));
+      // Save to local storage for user's own history persistence
+      const allHistories = JSON.parse(localStorage.getItem('chatHistory') || '{}');
+      allHistories[user.email] = messages;
+      localStorage.setItem('chatHistory', JSON.stringify(allHistories));
+
+      // Save to backend for admin analytics after model has responded.
+      const lastMessage = messages[messages.length - 1];
+      if (lastMessage.role === Role.MODEL && lastMessage.content && !isLoading) {
+        fetch('/api/chatHistory', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ email: user.email, history: messages }),
+        }).catch(error => console.error('Failed to save chat history to backend:', error));
+      }
     }
-  }, [messages, user.email, user.type]);
+  }, [messages, user.email, user.type, isLoading]);
 
   useEffect(() => {
     if (user.type === 'user' && user.name) {
@@ -125,17 +137,6 @@ const App: React.FC = () => {
     ];
 
     setMessages(updatedMessages);
-
-    // Save chat history to the backend
-    if (user.email) {
-        fetch('/api/chatHistory', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ email: user.email, history: updatedMessages }),
-        });
-    }
 
     // Add a placeholder for the streaming response
     setMessages((prev) => [
