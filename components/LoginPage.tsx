@@ -27,7 +27,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
         {/* Left Panel: Introduction */}
         <div className="w-full md:w-1/2 p-8 bg-brand-med flex flex-col justify-center">
             <h1 className="font-extrabold text-2xl md:text-3xl leading-tight text-brand-accent mb-4">
-                Get Simple, Straight Answers<br/>to Complex Legal Challenges
+                Get Simple, Straight Answers to Complex Legal Challenges
             </h1>
             <p className="text-md text-gray-200 mb-4">
                 Hello! I'm Matt, an AI guru with a strong legal research background.
