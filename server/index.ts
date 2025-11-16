@@ -32,7 +32,7 @@ export const api = onRequest(async (req, res) => {
                 }
                 const allHistories: Record<string, any> = {};
                 snapshot.forEach(doc => {
-                    allHistories[doc.id] = doc.data().history;
+                    allHistories[doc.id] = doc.data().history || []; // Ensure history is at least an empty array
                 });
                 res.status(200).json(allHistories);
             } catch (error) {
@@ -43,8 +43,8 @@ export const api = onRequest(async (req, res) => {
         } else if (req.method === 'POST') {
             try {
                 const { email, history } = req.body;
-                if (!email || !history) {
-                    res.status(400).send("Bad Request: Missing 'email' or 'history' in request body.");
+                if (!email || !Array.isArray(history)) {
+                    res.status(400).send("Bad Request: Missing 'email' or 'history' (must be an array).");
                     return;
                 }
                 // Use the user's email as the document ID for simplicity

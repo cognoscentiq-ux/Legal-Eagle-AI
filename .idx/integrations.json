@@ -1,4 +1,6 @@
 {
-  "firebase_hosting": {},
+  "firebase_hosting": {
+    "deploymentHostingUrl": "https://legal-eagle-aigit-10010433.web.app"
+  },
   "cloud_run_deploy": {}
 }
