@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { GoogleGenAI, Chat } from "@google/genai";
+import { GoogleGenAI, Chat } from '@google/genai';
 import Header from './components/Header';
 import ChatInput from './components/ChatInput';
 import ChatMessage from './components/ChatMessage';
@@ -8,206 +8,145 @@ import { getSystemInstruction } from './constants';
 import AIAvatar from './components/AIAvatar';
 import LoginPage from './components/LoginPage';
 import AdminDashboard from './components/AdminDashboard';
+import { supabase } from './src/supabaseClient';
+import { trackEvent } from './src/analytics';
 
 const welcomeMessage: Message = {
   id: 'welcome-0',
   role: Role.MODEL,
-  content: "Get Simple, Straight Answers\nto Complex Legal Challenges \n\nHello! I'm Matt, an AI guru with a strong legal research background.\n\nI'll search and compile insightful legal info on ANY QUESTION, sourcing my answers from Kenyan Case Law, Acts of parliament and published articles."
+  content: 'Get Simple, Straight Answers\nto Complex Legal Challenges \n\nHello! I\'m Matt, an AI guru with a strong legal research background.\n\nI\'ll search and compile insightful legal info on ANY QUESTION, sourcing my answers from Kenyan Case Law, Acts of parliament and published articles.'
 };
 
+interface CurrentUser {
+  id: string;
+  full_name: string | null;
+  email: string | null;
+  role: 'user' | 'admin' | null;
+}
+
 const App: React.FC = () => {
-  const [user, setUser] = useState<{ type: 'user' | 'admin' | null; name: string | null; email: string | null }>({ type: null, name: null, email: null });
+  const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
   const [messages, setMessages] = useState<Message[]>([welcomeMessage]);
+  const [sourcesByMsgId, setSourcesByMsgId] = useState<Record<string, Source[]>>({});
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [initError, setInitError] = useState<string | null>(null);
   const chatRef = useRef<Chat | null>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
-  const [sourcesByMsgId, setSourcesByMsgId] = useState<Record<string, Source[]>>({});
-
 
   const initChat = useCallback(() => {
-    if (!user.name) return;
+    if (!currentUser?.full_name) return;
     try {
-      const apiKey = process.env.API_KEY;
-      if (!apiKey) {
-        throw new Error("API_KEY environment variable not set.");
-      }
+      const apiKey = (process as any).env.API_KEY; // defined via Vite define
+      if (!apiKey) throw new Error('API_KEY env variable not set.');
       const ai = new GoogleGenAI({ apiKey });
       const chatInstance = ai.chats.create({
         model: 'gemini-2.5-flash',
-        config: {
-          systemInstruction: getSystemInstruction(user.name),
-          tools: [{googleSearch: {}}],
-        },
+        config: { systemInstruction: getSystemInstruction(currentUser.full_name), tools: [{ googleSearch: {} }] }
       });
       chatRef.current = chatInstance;
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'An unknown error occurred during initialization.');
+    } catch (e: any) {
+      setInitError(e.message || 'Initialization failed');
       console.error(e);
     }
-  }, [user.name]);
+  }, [currentUser?.full_name]);
 
-  // Check for logged-in user and load chat history on mount
   useEffect(() => {
-    const storedUser = localStorage.getItem('amicusUser');
-    if (storedUser) {
-        const parsedUser = JSON.parse(storedUser);
-        setUser(parsedUser);
-
-        if (parsedUser.type === 'user' && parsedUser.email) {
-            const allHistories = JSON.parse(localStorage.getItem('chatHistory') || '{}');
-            const userHistory = allHistories[parsedUser.email];
-            setMessages(userHistory && userHistory.length > 0 ? userHistory : [welcomeMessage]);
-        }
-    }
+    const subscription = supabase.auth.onAuthStateChange(async (_event, session) => {
+      if (session?.user) {
+        const { user } = session;
+        const { data: profile } = await supabase.from('profiles').select('full_name, role').eq('id', user.id).single();
+        const mapped: CurrentUser = {
+          id: user.id,
+          full_name: profile?.full_name || user.email?.split('@')[0] || 'User',
+          email: user.email,
+          role: (profile?.role as 'user' | 'admin') || 'user'
+        };
+        setCurrentUser(mapped);
+        await loadMessages(user.id);
+        trackEvent('login');
+      } else {
+        setCurrentUser(null);
+        setMessages([welcomeMessage]);
+        chatRef.current = null;
+      }
+    });
+    return () => { subscription.data.subscription.unsubscribe(); };
   }, []);
 
+  useEffect(() => { if (currentUser?.role) initChat(); }, [currentUser, initChat]);
 
-  useEffect(() => {
-    // Save user-specific chat history to local storage whenever it changes
-    if (messages.length > 1 && user.type === 'user' && user.email) {
-        const allHistories = JSON.parse(localStorage.getItem('chatHistory') || '{}');
-        allHistories[user.email] = messages;
-        localStorage.setItem('chatHistory', JSON.stringify(allHistories));
-    }
-  }, [messages, user.email, user.type]);
+  useEffect(() => { if (chatContainerRef.current) chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight; }, [messages]);
 
-  useEffect(() => {
-    if (user.type === 'user' && user.name) {
-      initChat();
-    }
-  }, [user.type, user.name, initChat]);
+  async function loadMessages(userId: string) {
+    const { data, error } = await supabase.from('messages').select('id, role, content, created_at').eq('user_id', userId).order('created_at', { ascending: true });
+    if (error) { console.warn('Load messages error:', error.message); setMessages([welcomeMessage]); return; }
+    if (!data || data.length === 0) setMessages([welcomeMessage]); else setMessages([welcomeMessage, ...data.map(m => ({ id: m.id, role: m.role as Role, content: m.content }))]);
+  }
 
-  useEffect(() => {
-    if (chatContainerRef.current) {
-      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
-    }
-  }, [messages]);
-
-  const handleLogin = (name: string, email: string) => {
-    if (name.toLowerCase() === 'admin' && email.toLowerCase() === 'admin@amicus.pro') {
-        const adminUser = { type: 'admin' as const, name: 'Admin', email: 'admin@amicus.pro' };
-        localStorage.setItem('amicusUser', JSON.stringify(adminUser));
-        setUser(adminUser);
-    } else {
-        const regularUser = { type: 'user' as const, name, email };
-        localStorage.setItem('amicusUser', JSON.stringify(regularUser));
-        setUser(regularUser);
-        
-        const allHistories = JSON.parse(localStorage.getItem('chatHistory') || '{}');
-        const userHistory = allHistories[email];
-        setMessages(userHistory && userHistory.length > 0 ? userHistory : [welcomeMessage]);
-    }
-  };
-
-  const handleLogout = () => {
-    localStorage.removeItem('amicusUser');
-    setUser({ type: null, name: null, email: null });
-    chatRef.current = null;
-  };
+  const handleLogout = async () => { await supabase.auth.signOut(); };
 
   const handleSendMessage = async (userMessage: string) => {
-    if (!chatRef.current) {
-      setError('Chat is not initialized.');
-      return;
-    }
-    
-    setIsLoading(true);
-    setError(null);
-    
-    const userMsgId = Date.now().toString();
-    const modelMsgId = (Date.now() + 1).toString();
-
-    setMessages((prev) => [
-        ...prev,
-        { id: userMsgId, role: Role.USER, content: userMessage },
-    ]);
-
-    // Add a placeholder for the streaming response
-    setMessages((prev) => [
-      ...prev,
-      { id: modelMsgId, role: Role.MODEL, content: '' },
-    ]);
-
-    const currentSources: Source[] = [];
-    const sourceUris = new Set<string>();
-
+    if (!chatRef.current || !currentUser) { setInitError('Chat not initialized.'); return; }
+    setIsLoading(true); setInitError(null);
+    const userMessageId = crypto.randomUUID();
+    setMessages(prev => [...prev, { id: userMessageId, role: Role.USER, content: userMessage }]);
+    const { error: insertErr } = await supabase.from('messages').insert({ id: userMessageId, user_id: currentUser.id, role: 'user', content: userMessage });
+    if (insertErr) console.warn('Insert user message failed:', insertErr.message);
+    trackEvent('message_sent', { length: userMessage.length });
+    const modelMsgId = crypto.randomUUID();
+    setMessages(prev => [...prev, { id: modelMsgId, role: Role.MODEL, content: '' }]);
+    const currentSources: Source[] = []; const sourceUris = new Set<string>();
+    let accumulatedModelContent = '';
     try {
       const stream = await chatRef.current.sendMessageStream({ message: userMessage });
-
       for await (const chunk of stream) {
-        const chunkText = chunk.text;
-
+        const chunkText = chunk.text || '';
+        accumulatedModelContent += chunkText;
         const groundingChunks = chunk.candidates?.[0]?.groundingMetadata?.groundingChunks;
         if (groundingChunks) {
-            for (const c of groundingChunks) {
-                if (c.web && c.web.uri && !sourceUris.has(c.web.uri)) {
-                    const newSource = { uri: c.web.uri, title: c.web.title || c.web.uri };
-                    currentSources.push(newSource);
-                    sourceUris.add(newSource.uri);
-                }
-            }
+          for (const c of groundingChunks) {
+            if (c.web?.uri && !sourceUris.has(c.web.uri)) { const newSource = { uri: c.web.uri, title: c.web.title || c.web.uri }; currentSources.push(newSource); sourceUris.add(newSource.uri); }
+          }
         }
-
-        setMessages((prev) =>
-          prev.map((msg) =>
-            msg.id === modelMsgId
-              ? { ...msg, content: msg.content + chunkText }
-              : msg
-          )
-        );
+        setMessages(prev => prev.map(m => m.id === modelMsgId ? { ...m, content: accumulatedModelContent } : m));
       }
-    } catch (e) {
-      const errorMessage = e instanceof Error ? e.message : 'An unknown error occurred.';
-      setError(errorMessage);
+    } catch (e: any) {
+      const errorMessage = e.message || 'Unknown error';
+      accumulatedModelContent = `Sorry, something went wrong: ${errorMessage}`;
+      setMessages(prev => prev.map(m => m.id === modelMsgId ? { ...m, content: accumulatedModelContent } : m));
       console.error(e);
-      setMessages((prev) =>
-        prev.map((msg) =>
-          msg.id === modelMsgId
-            ? { ...msg, content: `Sorry, something went wrong: ${errorMessage}` }
-            : msg
-        )
-      );
     } finally {
       setIsLoading(false);
-      if (currentSources.length > 0) {
-        setSourcesByMsgId(prev => ({ ...prev, [modelMsgId]: currentSources }));
+      if (currentSources.length > 0) setSourcesByMsgId(prev => ({ ...prev, [modelMsgId]: currentSources }));
+      if (accumulatedModelContent) {
+        const { error: modelInsertErr } = await supabase.from('messages').insert({ id: modelMsgId, user_id: currentUser.id, role: 'model', content: accumulatedModelContent });
+        if (modelInsertErr) console.warn('Insert model message failed:', modelInsertErr.message);
       }
     }
   };
 
-  if (!user.type) {
-    return <LoginPage onLogin={handleLogin} />;
-  }
-
-  if (user.type === 'admin') {
-    return <AdminDashboard onLogout={handleLogout} />;
-  }
-
+  if (!currentUser) return <LoginPage onAuthenticated={() => {}} />;
+  if (currentUser.role === 'admin') return <AdminDashboard onLogout={handleLogout} />;
 
   return (
-    <div className="flex flex-col h-screen">
-      <Header name={user.name} userType={user.type} onLogout={handleLogout} />
-      <main ref={chatContainerRef} className="flex-1 overflow-y-auto p-4 md:p-6 bg-brand-accent">
-        <div className="max-w-4xl mx-auto">
-          {messages.map((msg) => (
-            <ChatMessage key={msg.id} message={msg} sources={sourcesByMsgId[msg.id]} />
-          ))}
-           {isLoading && messages[messages.length - 1]?.role === Role.MODEL && messages[messages.length - 1]?.content === '' && (
-            <div className="flex items-start gap-4 my-4">
+    <div className='flex flex-col h-screen'>
+      <Header name={currentUser.full_name} userType={currentUser.role} onLogout={handleLogout} />
+      <main ref={chatContainerRef} className='flex-1 overflow-y-auto p-4 md:p-6 bg-brand-accent'>
+        <div className='max-w-4xl mx-auto'>
+          {messages.map(msg => (<ChatMessage key={msg.id} message={msg} sources={sourcesByMsgId[msg.id]} />))}
+          {isLoading && messages[messages.length - 1]?.role === Role.MODEL && messages[messages.length - 1]?.content === '' && (
+            <div className='flex items-start gap-4 my-4'>
               <AIAvatar />
-              <div className="max-w-xl p-4 rounded-2xl bg-brand-med text-gray-200 rounded-tl-none">
-                <div className="flex items-center space-x-2">
-                    <span className="h-2 w-2 bg-pink-400 rounded-full animate-bounce [animation-delay:-0.3s]"></span>
-                    <span className="h-2 w-2 bg-pink-400 rounded-full animate-bounce [animation-delay:-0.15s]"></span>
-                    <span className="h-2 w-2 bg-pink-400 rounded-full animate-bounce"></span>
+              <div className='max-w-xl p-4 rounded-2xl bg-brand-med text-gray-200 rounded-tl-none'>
+                <div className='flex items-center space-x-2'>
+                  <span className='h-2 w-2 bg-pink-400 rounded-full animate-bounce [animation-delay:-0.3s]'></span>
+                  <span className='h-2 w-2 bg-pink-400 rounded-full animate-bounce [animation-delay:-0.15s]'></span>
+                  <span className='h-2 w-2 bg-pink-400 rounded-full animate-bounce'></span>
                 </div>
               </div>
             </div>
           )}
-          {error && (
-            <div className="text-red-400 bg-red-900/50 p-3 rounded-lg text-center">{error}</div>
-          )}
+          {initError && (<div className='text-red-400 bg-red-900/50 p-3 rounded-lg text-center'>{initError}</div>)}
         </div>
       </main>
       <ChatInput onSendMessage={handleSendMessage} isLoading={isLoading} />
